@@ -1,0 +1,2 @@
+# dyplom
+pracaInż
