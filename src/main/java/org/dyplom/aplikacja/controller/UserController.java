@@ -1,13 +1,19 @@
 package org.dyplom.aplikacja.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.tags.Tags;
+import java.security.Principal;
+import java.util.Optional;
+import java.util.Set;
+import org.dyplom.aplikacja.logic.UserRepository;
 import org.dyplom.aplikacja.logic.UserService;
 import org.dyplom.aplikacja.model.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +28,8 @@ public class UserController {
 
   @Autowired
   private UserService userService; // Injecting UserService
+  @Autowired
+  private UserRepository userRepository;
 
   // Get all users
   @Description("Get all users")
@@ -38,13 +46,22 @@ public class UserController {
     return ResponseEntity.ok(user);
   }
 
+  @GetMapping("/me")
+  public ResponseEntity<?> getCurrentUser(Principal principal) {
+    if (principal == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+    }
+    Optional<User> user = userRepository.findByUsername(principal.getName());
+    return ResponseEntity.ok(user);
+  }
+
 
   // Create a new user
   @PostMapping
   public ResponseEntity<User> createUser(
       @RequestParam("name") String name,
       @RequestParam("password") String password,
-      @RequestParam("role") String role
+      @RequestParam("role") Set<String > role
   ) {
     // Hash the password before saving
     String hashedPassword = passwordEncoder.encode(password);
@@ -53,7 +70,7 @@ public class UserController {
     User user = new User();
     user.setUsername(name);
     user.setPassword(hashedPassword); // Set the hashed password
-    user.setRole(role); // Set the role
+    user.setRoles(role); // Set the role
 
     User createdUser = userService.createUser(user);
     return ResponseEntity.status(201).body(createdUser);
