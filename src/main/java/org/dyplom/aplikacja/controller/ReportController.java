@@ -3,7 +3,6 @@ package org.dyplom.aplikacja.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import org.dyplom.aplikacja.logic.ReportService;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,30 +20,28 @@ public class ReportController {
     this.reportService = reportService;
   }
 
-  @GetMapping("/sales")
-  public ResponseEntity<byte[]> generateSalesReport(
-      @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-  ) {
-    byte[] report = reportService.generateSalesReport(startDate, endDate);
-    return ResponseEntity.ok()
-        .header("Content-Disposition", "attachment; filename=sales_report.pdf")
-        .body(report);
-  }
-
-  @GetMapping("/inventory")
-  public ResponseEntity<byte[]> generateInventoryReport() {
-    byte[] report = reportService.generateInventoryReport();
-    return ResponseEntity.ok()
-        .header("Content-Disposition", "attachment; filename=inventory_report.pdf")
-        .body(report);
-  }
-
   @GetMapping("/users")
   public ResponseEntity<byte[]> generateUserReport() {
     byte[] report = reportService.generateUserReport();
     return ResponseEntity.ok()
         .header("Content-Disposition", "attachment; filename=user_report.pdf")
+        .body(report);
+  }
+
+  @GetMapping("/inventory")
+  public ResponseEntity<byte[]> generateInventoryReport() {
+    byte[] report = reportService.generateProductReport();
+    return ResponseEntity.ok()
+        .header("Content-Disposition", "attachment; filename=inventory_report.pdf")
+        .body(report);
+  }
+
+  @GetMapping("/tasks")
+  public ResponseEntity<byte[]> generateTaskReport(@RequestParam(name = "startDate") LocalDate from,
+      @RequestParam(name = "endDate") LocalDate to) {
+    byte[] report = reportService.generateTaskReport(from, to);
+    return ResponseEntity.ok()
+        .header("Content-Disposition", "attachment; filename=task_report.pdf")
         .body(report);
   }
 }

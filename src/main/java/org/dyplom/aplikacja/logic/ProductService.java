@@ -1,6 +1,8 @@
 package org.dyplom.aplikacja.logic;
 
+import java.time.LocalDate;
 import java.util.List;
+import org.dyplom.aplikacja.logic.repositories.ProductRepository;
 import org.dyplom.aplikacja.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class ProductService {
 
   public Product updateProduct(Long id, Product product) {
     product.setId(id);
+    product.setLastUpdated(LocalDate.now());
     return productRepository.save(product);
   }
 

@@ -37,7 +37,6 @@ public class ProductController {
   @PostMapping
   public ResponseEntity<?> createProduct(@RequestBody Product product) {
     try {
-      // Walidacja, aby ilość produktów nie była ujemna
       if (product.getQuantity() < 0) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quantity cannot be negative.");
       }

@@ -2,11 +2,14 @@ package org.dyplom.aplikacja.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.dyplom.aplikacja.logic.ResourceService;
+import org.dyplom.aplikacja.model.DTO.ResourceDTO;
 import org.dyplom.aplikacja.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,8 +28,12 @@ public class ResourceController {
   private ResourceService resourceService;
 
   @GetMapping
-  public ResponseEntity<List<Resource>> getAllResources() {
-    return ResponseEntity.ok(resourceService.getAllResources());
+  public ResponseEntity<List<ResourceDTO>> getAllResources() {
+    List<Resource> resources = resourceService.getAllResources();
+    List<ResourceDTO> resourceDTOs = resources.stream()
+        .map(resource -> resourceService.mapToDTO(resource))
+        .collect(Collectors.toList());
+    return ResponseEntity.ok(resourceDTOs);
   }
 
   @GetMapping("/{id}")
@@ -34,6 +41,7 @@ public class ResourceController {
     return ResponseEntity.ok(resourceService.getResourceById(id));
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ResponseEntity<?> createResource(@RequestBody Resource resource) {
     try {
@@ -59,6 +67,14 @@ public class ResourceController {
     resourceService.deleteResource(id);
     return ResponseEntity.noContent().build();
   }
+
+  @PostMapping("/assign/{taskId}")
+  public ResponseEntity<?> assignResourcesToOrder(@PathVariable Long taskId, @RequestBody List<Long> resourceIds) {
+    try {
+      resourceService.assignResourcesToOrder(taskId, resourceIds);
+      return ResponseEntity.ok("Resources assigned successfully.");
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error assigning resources: " + e.getMessage());
+    }
+  }
 }
-
-

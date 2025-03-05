@@ -1,23 +1,26 @@
 package org.dyplom.aplikacja.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.security.Principal;
-import java.util.Optional;
-import java.util.Set;
-import org.dyplom.aplikacja.logic.UserRepository;
+import java.util.List;
 import org.dyplom.aplikacja.logic.UserService;
 import org.dyplom.aplikacja.model.User;
-
+import org.dyplom.aplikacja.model.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name="User Controller")
 @RestController
@@ -27,11 +30,8 @@ public class UserController {
   private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
   @Autowired
-  private UserService userService; // Injecting UserService
-  @Autowired
-  private UserRepository userRepository;
+  private UserService userService;
 
-  // Get all users
   @Description("Get all users")
   @GetMapping
   public ResponseEntity<List<User>> getAllUsers() {
@@ -39,51 +39,51 @@ public class UserController {
     return ResponseEntity.ok(users);
   }
 
-  // Get user by ID
   @GetMapping("/{id}")
   public ResponseEntity<User> getUserById(@PathVariable Integer id) {
     User user = userService.getUserById(id);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
     return ResponseEntity.ok(user);
   }
 
   @GetMapping("/me")
-  public ResponseEntity<?> getCurrentUser(Principal principal) {
-    if (principal == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
-    }
-    Optional<User> user = userRepository.findByUsername(principal.getName());
-    return ResponseEntity.ok(user);
+  public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+    UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+    User user = userService.getAllUsers().stream()
+        .filter(u -> u.getUsername().equals(userDetails.getUsername()))
+        .findFirst()
+        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+    return ResponseEntity.ok(new UserResponse(userDetails.getUsername(), user.getRole()));
   }
 
-
-  // Create a new user
   @PostMapping
   public ResponseEntity<User> createUser(
       @RequestParam("name") String name,
       @RequestParam("password") String password,
-      @RequestParam("role") Set<String > role
+      @RequestParam("role") String role
   ) {
-    // Hash the password before saving
+
     String hashedPassword = passwordEncoder.encode(password);
 
-    // Create a new User instance
     User user = new User();
     user.setUsername(name);
-    user.setPassword(hashedPassword); // Set the hashed password
-    user.setRoles(role); // Set the role
+    user.setPassword(hashedPassword);
+    user.setRole(role);
 
     User createdUser = userService.createUser(user);
     return ResponseEntity.status(201).body(createdUser);
   }
 
-  // Update an existing user
   @PutMapping("/{id}")
-  public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+  public ResponseEntity<User> updateUser(@PathVariable Integer id, @RequestBody User user) {
     User updatedUser = userService.updateUser(id, user);
     return ResponseEntity.ok(updatedUser);
   }
 
-  // Delete a user
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
     userService.deleteUser(id);

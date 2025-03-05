@@ -1,29 +1,15 @@
-package org.dyplom.aplikacja.model;
+package org.dyplom.aplikacja.model.DTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import java.util.Set;
 
-@Entity
-public class Resource {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ResourceDTO {
   private Long id;
-
   private String name;
   private String description;
   private String type;
   private String serialNumber;
   private String status;
-
-  @ManyToMany(mappedBy = "resources", fetch = FetchType.EAGER)
-  @JsonIgnore
-  private Set<Task> tasks;
+  private Set<TaskDTO> assignedTasks;
 
   public Long getId() {
     return id;
@@ -73,12 +59,11 @@ public class Resource {
     this.status = status;
   }
 
-  public Set<Task> getTasks() {
-    return tasks;
+  public Set<TaskDTO> getAssignedTasks() {
+    return assignedTasks;
   }
 
-  public void setTasks(final Set<Task> tasks) {
-    this.tasks = tasks;
+  public void setAssignedTasks(final Set<TaskDTO> assignedTasks) {
+    this.assignedTasks = assignedTasks;
   }
 }
-

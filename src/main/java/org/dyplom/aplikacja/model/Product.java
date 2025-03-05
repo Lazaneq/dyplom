@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.time.LocalDate;
 
 @Entity
 public class Product {
@@ -15,6 +16,7 @@ public class Product {
   private String description;
   private int quantity;
   private double price;
+  private LocalDate lastUpdated;
 
   public Long getId() {
     return id;
@@ -54,6 +56,14 @@ public class Product {
 
   public void setPrice(final double price) {
     this.price = price;
+  }
+
+  public LocalDate getLastUpdated() {
+    return lastUpdated;
+  }
+
+  public void setLastUpdated(final LocalDate lastUpdated) {
+    this.lastUpdated = lastUpdated;
   }
 }
 
